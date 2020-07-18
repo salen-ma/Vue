@@ -13,6 +13,7 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 let uid = 0
 
 export function initMixin (Vue: Class<Component>) {
+  // 合并 options / 初始化操作
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
     // a uid
@@ -20,6 +21,7 @@ export function initMixin (Vue: Class<Component>) {
 
     let startTag, endTag
     /* istanbul ignore if */
+    // 开发环境的性能检测，和功能无关
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
       startTag = `vue-perf-start:${vm._uid}`
       endTag = `vue-perf-end:${vm._uid}`
@@ -35,6 +37,7 @@ export function initMixin (Vue: Class<Component>) {
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
+      // 合并构造函数的 options 和用户传入的 options
       vm.$options = mergeOptions(
         resolveConstructorOptions(vm.constructor),
         options || {},
@@ -49,13 +52,23 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
+    // vm 生命周期相关属性初始化
+    // $parent/$root/$children/$refs
     initLifecycle(vm)
+    // vm 事件监听初始化，父组件绑定在当前组件上的事件
     initEvents(vm)
+    // vm 的编译 render 初始化
+    // $slots/$scopedSlots/_c/$createElement/$attrs/$listeners
     initRender(vm)
+    // 触发 beforeCreate 钩子函数
     callHook(vm, 'beforeCreate')
+    // 把 inject 的成员注入到 vm 上
     initInjections(vm) // resolve injections before data/props
+    // 初始化 vm 的 _props/methods/_data/computed/watch
     initState(vm)
+    // 初始化 provide
     initProvide(vm) // resolve provide after data/props
+    // 触发 created 钩子函数
     callHook(vm, 'created')
 
     /* istanbul ignore if */

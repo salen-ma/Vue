@@ -48,9 +48,12 @@ export function proxy (target: Object, sourceKey: string, key: string) {
 export function initState (vm: Component) {
   vm._watchers = []
   const opts = vm.$options
+  // 将 props 参数响应式处理并注入 vm
   if (opts.props) initProps(vm, opts.props)
+  // 将 methods 参数的属性注入 vm
   if (opts.methods) initMethods(vm, opts.methods)
   if (opts.data) {
+    // 将 data 参数响应式处理并注入 vm
     initData(vm)
   } else {
     observe(vm._data = {}, true /* asRootData */)
@@ -148,6 +151,7 @@ function initData (vm: Component) {
     }
   }
   // observe data
+  // 响应式处理
   observe(data, true /* asRootData */)
 }
 
