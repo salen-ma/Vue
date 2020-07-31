@@ -165,6 +165,7 @@ export function parse (
     }
   }
 
+  // 解析模板
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,

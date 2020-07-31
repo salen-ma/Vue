@@ -243,6 +243,8 @@ export function defineComputed (
 }
 
 function createComputedGetter (key) {
+  // 在执行 render 函数进行渲染时，渲染到使用 computed 值的地方会触发 computedGetter
+  // 此时会取到这个 computed key 对应的 watcher，第一次执行时
   return function computedGetter () {
     const watcher = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {
@@ -314,6 +316,7 @@ function createWatcher (
     options = handler
     handler = handler.handler
   }
+  // 去 methods 内寻找对应的方法
   if (typeof handler === 'string') {
     handler = vm[handler]
   }
@@ -356,15 +359,19 @@ export function stateMixin (Vue: Class<Component>) {
       return createWatcher(vm, expOrFn, cb, options)
     }
     options = options || {}
+    // 标记为用户 watcher
     options.user = true
+    // 创建用户 watcher 对象
     const watcher = new Watcher(vm, expOrFn, cb, options)
     if (options.immediate) {
+      // 立即执行一次 cb 回调，并且把当前值传入
       try {
         cb.call(vm, watcher.value)
       } catch (error) {
         handleError(error, vm, `callback for immediate watcher "${watcher.expression}"`)
       }
     }
+    // 返回取消监听的方法
     return function unwatchFn () {
       watcher.teardown()
     }

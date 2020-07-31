@@ -82,6 +82,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
 
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
+  // 把 cb 加上异常处理放入 callbacks
   callbacks.push(() => {
     if (cb) {
       try {
@@ -95,6 +96,7 @@ export function nextTick (cb?: Function, ctx?: Object) {
   })
   if (!pending) {
     pending = true
+    // 调用
     timerFunc()
   }
   // $flow-disable-line

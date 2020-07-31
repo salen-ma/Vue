@@ -108,10 +108,12 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * or the existing observer if the value already has one.
  */
 export function observe (value: any, asRootData: ?boolean): Observer | void {
+  // 判断 value 是否是对象，或者是 VNode 实例
   if (!isObject(value) || value instanceof VNode) {
     return
   }
   let ob: Observer | void
+  // 如果 value 有 __ob__ (observer对象) 属性 结束处理
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
     ob = value.__ob__
   } else if (
@@ -161,9 +163,13 @@ export function defineReactive (
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
         dep.depend()
+        // 如果子观察目标存在，建立子对象的依赖关系
+        // 当前属性对应的值是对象或数组时，当改变这个对象或数组时也要触发依赖的更新
+        // 如调用数组的 push 等方法时，或者调用 Vue.set/Vue.del 改变对象时
         if (childOb) {
           childOb.dep.depend()
           if (Array.isArray(value)) {
+            // 当数组中元素是对象时，给元素收集依赖
             dependArray(value)
           }
         }
@@ -173,6 +179,7 @@ export function defineReactive (
     set: function reactiveSetter (newVal) {
       const value = getter ? getter.call(obj) : val
       /* eslint-disable no-self-compare */
+      // NaN
       if (newVal === value || (newVal !== newVal && value !== value)) {
         return
       }
@@ -204,16 +211,22 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  // 判断当 target 是数组时,key 是否是合法索引
   if (Array.isArray(target) && isValidArrayIndex(key)) {
+    // 索引超过数组长度时，改变数组长度为索引值
     target.length = Math.max(target.length, key)
+    // 执行重写后的 splice 会触发通知
     target.splice(key, 1, val)
     return val
   }
+  // 如果 key 已经存在直接赋值
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
   }
+  // 获取 target 上的 observe 对象
   const ob = (target: any).__ob__
+  // 判断 target 是否是 vue 实例或者是否是 $data
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid adding reactive properties to a Vue instance or its root $data ' +
@@ -221,11 +234,14 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     )
     return val
   }
+  // ob 不存在时说明 target 不是响应式对象，直接赋值返回
   if (!ob) {
     target[key] = val
     return val
   }
+  // 把 key 设置为响应式对象
   defineReactive(ob.value, key, val)
+  // 发送通知
   ob.dep.notify()
   return val
 }

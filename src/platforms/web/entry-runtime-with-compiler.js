@@ -57,6 +57,7 @@ Vue.prototype.$mount = function (
         return this
       }
     } else if (el) {
+      // 如果没有 template，获取 el 的 outerhtml 作为模板
       template = getOuterHTML(el)
     }
     if (template) {
@@ -65,6 +66,7 @@ Vue.prototype.$mount = function (
         mark('compile')
       }
 
+      // 把 template 转换为 render 函数
       const { render, staticRenderFns } = compileToFunctions(template, {
         outputSourceRange: process.env.NODE_ENV !== 'production',
         shouldDecodeNewlines,

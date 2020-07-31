@@ -36,6 +36,7 @@ export default class Dep {
 
   notify () {
     // stabilize the subscriber list first
+    // 备份 subs，notify 时加入 subs 的依赖先不做处理
     const subs = this.subs.slice()
     if (process.env.NODE_ENV !== 'production' && !config.async) {
       // subs aren't sorted in scheduler if not running async
