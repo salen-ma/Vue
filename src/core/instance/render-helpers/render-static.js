@@ -15,11 +15,13 @@ export function renderStatic (
     return tree
   }
   // otherwise, render a fresh tree.
+  // 生成 vnode
   tree = cached[index] = this.$options.staticRenderFns[index].call(
     this._renderProxy,
     null,
     this // for render fns generated for functional component templates
   )
+  // 把 vnode 节点标记为静态的，这样 patch 时就可以跳过此 vnode 的对比
   markStatic(tree, `__static__${index}`, false)
   return tree
 }

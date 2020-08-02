@@ -70,6 +70,7 @@ export function parse (
   template: string,
   options: CompilerOptions
 ): ASTElement | void {
+  // 解析 options
   warn = options.warn || baseWarn
 
   platformIsPreTag = options.isPreTag || no
@@ -175,6 +176,9 @@ export function parse (
     shouldDecodeNewlinesForHref: options.shouldDecodeNewlinesForHref,
     shouldKeepComment: options.comments,
     outputSourceRange: options.outputSourceRange,
+    // 解析过程中的回调函数，生成 AST
+
+    // 开始标签
     start (tag, attrs, unary, start) {
       // check namespace.
       // inherit parent ns if there is one
@@ -186,6 +190,7 @@ export function parse (
         attrs = guardIESVGBug(attrs)
       }
 
+      // 创建 AST 对象
       let element: ASTElement = createASTElement(tag, attrs, currentParent)
       if (ns) {
         element.ns = ns
@@ -247,6 +252,7 @@ export function parse (
       }
     },
 
+    // 结束标签
     end (tag, start, end) {
       const element = stack[stack.length - 1]
       if (!inPre) {
@@ -265,6 +271,7 @@ export function parse (
       closeElement(element)
     },
 
+    // 文本内容
     chars (text: string, start: number, end: number) {
       if (!currentParent) {
         if (process.env.NODE_ENV !== 'production') {
@@ -336,6 +343,8 @@ export function parse (
         }
       }
     },
+
+    // 注释标签
     comment (text: string, start, end) {
       const child: ASTText = {
         type: 3,
@@ -349,6 +358,8 @@ export function parse (
       currentParent.children.push(child)
     }
   })
+
+  // 返回解析好的 ast
   return root
 }
 

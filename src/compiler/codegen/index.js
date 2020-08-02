@@ -29,7 +29,7 @@ export class CodegenState {
     const isReservedTag = options.isReservedTag || no
     this.maybeComponent = (el: ASTElement) => !!el.component || !isReservedTag(el.tag)
     this.onceId = 0
-    this.staticRenderFns = []
+    this.staticRenderFns = [] // 存储静态根节点生成的代码
     this.pre = false
   }
 }
@@ -52,11 +52,14 @@ export function generate (
 }
 
 export function genElement (el: ASTElement, state: CodegenState): string {
+  // 是否有 pre 指令
   if (el.parent) {
     el.pre = el.pre || el.parent.pre
   }
 
+  // staticProcessed 标记阶段是否已经处理
   if (el.staticRoot && !el.staticProcessed) {
+    // 处理静态根节点
     return genStatic(el, state)
   } else if (el.once && !el.onceProcessed) {
     return genOnce(el, state)
@@ -69,6 +72,7 @@ export function genElement (el: ASTElement, state: CodegenState): string {
   } else if (el.tag === 'slot') {
     return genSlot(el, state)
   } else {
+    // 以上都不满足时处理组件或内置标签
     // component or element
     let code
     if (el.component) {
@@ -76,6 +80,8 @@ export function genElement (el: ASTElement, state: CodegenState): string {
     } else {
       let data
       if (!el.plain || (el.pre && state.maybeComponent(el))) {
+        // 生成元素的属性、指令、事件等
+        // 处理各种指令，包括 genDirectives (model/text/html)
         data = genData(el, state)
       }
 
@@ -104,8 +110,10 @@ function genStatic (el: ASTElement, state: CodegenState): string {
   if (el.pre) {
     state.pre = el.pre
   }
+  // 记录静态根节点生成的代码
   state.staticRenderFns.push(`with(this){return ${genElement(el, state)}}`)
   state.pre = originalPreState
+  // 传入当前静态根节点在 staticRenderFns 数组中的索引
   return `_m(${
     state.staticRenderFns.length - 1
   }${
@@ -216,6 +224,7 @@ export function genFor (
 }
 
 export function genData (el: ASTElement, state: CodegenState): string {
+  // 生成 data 即为 createElement 中的第二个参数
   let data = '{'
 
   // directives first.

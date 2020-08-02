@@ -244,7 +244,14 @@ export function defineComputed (
 
 function createComputedGetter (key) {
   // 在执行 render 函数进行渲染时，渲染到使用 computed 值的地方会触发 computedGetter
-  // 此时会取到这个 computed key 对应的 watcher，第一次执行时
+  // 此时会取到这个 computed key 对应的 watcher，第一次执行时 dirty 为 true 会执行 watcher.evaluate()
+  // 在 watcher.evaluate() 内部会调用 watcher.get() 执行 computed key 对应的函数
+  // 函数执行时会触发函数内使用到的数据的 getter 方法为数据收集当前的 watcher 依赖
+  // 将函数的返回值记录到 watcher.value
+  // watcher.evaluate() 执行完 watcher.get() 后将 dirty 变为 false
+  // 如果有其他 Dep.target 依赖，调用 watcher.depend() 继续为当前数据收集依赖，此时的 Dep.target 有值的话一般是渲染 Watcher
+  // 当下次再取值时由于 dirty 为 false 会直接返回 watcher.value，实现数据的缓存效果
+
   return function computedGetter () {
     const watcher = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {

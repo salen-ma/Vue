@@ -44,9 +44,10 @@ const componentVNodeHooks = {
       const mountedNode: any = vnode // work around flow
       componentVNodeHooks.prepatch(mountedNode, mountedNode)
     } else {
+      // 实例化组件
       const child = vnode.componentInstance = createComponentInstanceForVnode(
         vnode,
-        activeInstance
+        activeInstance // 父组件的实例
       )
       child.$mount(hydrating ? vnode.elm : undefined, hydrating)
     }
@@ -112,6 +113,8 @@ export function createComponent (
   const baseCtor = context.$options._base
 
   // plain options object: turn it into a constructor
+  // 如果 Ctor 不是一个构造函数是一个对象
+  // 调用 Vue.extend() 创建一个子组件的构造函数
   if (isObject(Ctor)) {
     Ctor = baseCtor.extend(Ctor)
   }
@@ -126,6 +129,7 @@ export function createComponent (
   }
 
   // async component
+  // 处理异步组件
   let asyncFactory
   if (isUndef(Ctor.cid)) {
     asyncFactory = Ctor
@@ -148,14 +152,17 @@ export function createComponent (
 
   // resolve constructor options in case global mixins are applied after
   // component constructor creation
+  // 合并 mixins 混入的选项
   resolveConstructorOptions(Ctor)
 
   // transform component v-model data into props & events
+  // 处理组件上的 v-model
   if (isDef(data.model)) {
     transformModel(Ctor.options, data)
   }
 
   // extract props
+  // 提取 props
   const propsData = extractPropsFromVNodeData(data, Ctor, tag)
 
   // functional component
@@ -183,14 +190,19 @@ export function createComponent (
   }
 
   // install component management hooks onto the placeholder node
+  // 安装组件的钩子函数 init/prepatch/insert/destory
+  // 准备好 data.hook 中的钩子函数
+  // 组件在 init 钩子中实例化
   installComponentHooks(data)
 
   // return a placeholder vnode
   const name = Ctor.options.name || tag
+  // 创建自定义组件的 VNode，设置自定义组件名字
+  // 记录 this.componentOptions = componentOptions
   const vnode = new VNode(
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
     data, undefined, undefined, undefined, context,
-    { Ctor, propsData, listeners, tag, children },
+    { Ctor, propsData, listeners, tag, children }, // componentOptions
     asyncFactory
   )
 
@@ -220,11 +232,14 @@ export function createComponentInstanceForVnode (
     options.render = inlineTemplate.render
     options.staticRenderFns = inlineTemplate.staticRenderFns
   }
+  // 创建组件实例
   return new vnode.componentOptions.Ctor(options)
 }
 
 function installComponentHooks (data: VNodeData) {
   const hooks = data.hook || (data.hook = {})
+  // 用户可以传递自定义钩子函数
+  // 把用户传入的自定义钩子函数和 componentVNodeHooks 中预定义的钩子函数合并
   for (let i = 0; i < hooksToMerge.length; i++) {
     const key = hooksToMerge[i]
     const existing = hooks[key]
